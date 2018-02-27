@@ -14,6 +14,7 @@ const connectionString = process.env.DATABASE_URL;
  */
 async function create({ title, text, datetime } = {}) {
   /* todo útfæra */
+  
 }
 
 /**

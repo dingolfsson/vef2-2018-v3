@@ -19,7 +19,7 @@ async function query(q) {
   try {
     const result = await client.query(q);
 
-    const { rows } = result;
+    const rows = result;
     return rows;
   } catch (err) {
     console.error('Error running query');
