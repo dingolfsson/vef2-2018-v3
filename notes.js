@@ -1,6 +1,9 @@
 /* todo sækja pakka sem vantar  */
+require('dotenv').config();
+const { Client } = require('pg');
+const xss = require('xss');
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = 'postgres://:@localhost/v3';
 
 /**
  * Create a note asynchronously.
@@ -12,9 +15,18 @@ const connectionString = process.env.DATABASE_URL;
  *
  * @returns {Promise} Promise representing the object result of creating the note
  */
-async function create({ title, text, datetime } = {}) {
+async function create({ title = '', text = '', datetime = '' } = {}) {
   /* todo útfæra */
-  
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    const data2 = await client.query('INSERT INTO notes(title, text, datetime) values ($1, $2, $3)', [xss(title), xss(text), xss(datetime)]);
+    await client.end();
+    return data2;
+  } catch (err) {
+    console.info(err);
+  }
+  return false;
 }
 
 /**
@@ -23,7 +35,16 @@ async function create({ title, text, datetime } = {}) {
  * @returns {Promise} Promise representing an array of all note objects
  */
 async function readAll() {
-  /* todo útfæra */
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    const data2 = await client.query('SELECT * FROM notes;');
+    await client.end();
+    return data2.rows;
+  } catch (err) {
+    console.info(err);
+  }
+  return false;
 }
 
 /**
@@ -31,10 +52,20 @@ async function readAll() {
  *
  * @param {number} id - Id of note
  *
- * @returns {Promise} Promise representing the note object or null if not found
+ * @returns {Promise} Promise representing the note object or null if not [found
  */
 async function readOne(id) {
   /* todo útfæra */
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    const data2 = await client.query('SELECT * FROM notes WHERE id = $1;', [id]);
+    await client.end();
+    return data2.rows;
+  } catch (err) {
+    console.info(err);
+  }
+  return false;
 }
 
 /**
@@ -48,8 +79,17 @@ async function readOne(id) {
  *
  * @returns {Promise} Promise representing the object result of creating the note
  */
-async function update(id, { title, text, datetime } = {}) {
-  /* todo útfæra */
+async function update(id, { title = '', text = '', datetime = '' } = {}) {
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    const data2 = await client.query('UPDATE notes SET title = $2 WHERE id = $1', [id, title]);
+    await client.end();
+    return data2;
+  } catch (err) {
+    console.info(err);
+  }
+  return false;
 }
 
 /**
@@ -61,6 +101,16 @@ async function update(id, { title, text, datetime } = {}) {
  */
 async function del(id) {
   /* todo útfæra */
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    const data2 = await client.query('DELETE FROM notes WHERE id = $1', [id]);
+    await client.end();
+    return data2;
+  } catch (err) {
+    console.info(err);
+  }
+  return false;
 }
 
 module.exports = {
