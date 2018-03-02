@@ -30,7 +30,7 @@ async function getAll(req, res) {
 async function getID(req, res) {
   const { id } = req.params;
   const getting = await readOne(id);
-  if (getting.length === 1) {
+  if (getting.length !== null) {
     return res.json(getting);
   }
   return res.status(404).json({ error: 'Not found' });

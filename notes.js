@@ -3,7 +3,7 @@ const { Client } = require('pg');
 const xss = require('xss');
 const validator = require('validator');
 
-const connectionString = 'postgres://:@localhost/v3';
+const connectionString = process.env.DATABASE_URL || 'postgres://:@localhost/v3';
 
 
 /**
@@ -104,7 +104,9 @@ async function readOne(id) {
     const query = 'SELECT * FROM notes WHERE id = $1;';
     const data = await client.query(query, [id]);
     await client.end();
-    return data.rows;
+    if (data.rowCount === 1) {
+      return data.rows[0];
+    }
   } catch (err) {
     console.info(err);
   }
