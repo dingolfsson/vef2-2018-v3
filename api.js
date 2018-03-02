@@ -20,11 +20,13 @@ async function postRequest(req, res) {
   return res.json(data.error);
 }
 
+// Get All Notes
 async function getAll(req, res) {
   const all = await readAll();
   res.json(all.rows);
 }
 
+// Get note by ID
 async function getID(req, res) {
   const { id } = req.params;
   const getting = await readOne(id);
@@ -34,7 +36,7 @@ async function getID(req, res) {
   return res.status(404).json({ error: 'Not found' });
 }
 
-// Update
+// Update a note
 async function put(req, res) {
   const { id } = req.params;
   const { title = '', text = '', datetime = '' } = req.body;
@@ -47,6 +49,7 @@ async function put(req, res) {
   return res.status(404).json({ error: 'Not found' });
 }
 
+// Delete a note
 async function deleteID(req, res) {
   const { id } = req.params;
   const deleting = await del(id);
