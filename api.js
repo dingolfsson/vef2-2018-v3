@@ -11,72 +11,58 @@ const {
 const router = express.Router();
 
 // Create
-router.post('/', async (req, res) => {
+async function postRequest(req, res) {
   const { title = '', text = '', datetime = '' } = req.body;
   const data = await create({ title, text, datetime });
-  if (data) {
-    return res.json({ title, text, datetime });
+  if (data.error === null) {
+    return res.json(data.item);
   }
-  return res.json(data);
-});
+  return res.json(data.error);
+}
 
-// Read all
-router.get('/', async (req, res) => {
+async function getAll(req, res) {
   const all = await readAll();
-  res.json(all);
-});
+  res.json(all.rows);
+}
 
-// Read One
-router.get('/:id', async (req, res) => {
+async function getID(req, res) {
   const { id } = req.params;
-
   const getting = await readOne(id);
   if (getting.length === 1) {
     return res.json(getting);
   }
-
   return res.status(404).json({ error: 'Not found' });
-});
+}
 
 // Update
-router.put('/:id', async (req, res) => {
+async function put(req, res) {
   const { id } = req.params;
-  const { title = '' } = req.body;
+  const { title = '', text = '', datetime = '' } = req.body;
 
-  if (title.length === 0) {
-    return res.status(400).json({
-      field: 'title',
-      error: 'Title must be a non-empty string',
-    });
+  const data = await update(id, { title, text, datetime });
+
+  if (data.item != null) {
+    return res.json(data.item);
   }
-  console.info(title);
-  const item = await update(id, { title });
-  console.info(item);
-
-  if (item) {
-    item.title = title;
-    return res.status(200).json(item);
-  }
-
   return res.status(404).json({ error: 'Not found' });
-});
+}
 
-// Delete
-router.delete('/:id', async (req, res) => {
+async function deleteID(req, res) {
   const { id } = req.params;
-
   const deleting = await del(id);
-  if (deleting.rowCount === 1) {
+  if (deleting.item) {
     return res.json();
   }
-
-  return res.status(404).json({ error: 'Not found' });
-});
+  return res.status(404).json({ error: deleting.message });
+}
 
 function catchErrors(fn) {
   return (req, res, next) => fn(req, res, next).catch(next);
 }
 
-/* todo útfæra api */
-
+router.post('/', catchErrors(postRequest));
+router.get('/', catchErrors(getAll));
+router.get('/:id', catchErrors(getID));
+router.put('/:id', catchErrors(put));
+router.delete('/:id', catchErrors(deleteID));
 module.exports = router;
