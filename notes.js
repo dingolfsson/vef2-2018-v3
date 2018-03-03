@@ -3,7 +3,7 @@ const { Client } = require('pg');
 const xss = require('xss');
 const validator = require('validator');
 
-const connectionString = process.env.DATABASE_URL || 'postgres://:@localhost/v3';
+const connectionString = 'postgres://:@localhost/v3';
 
 
 /**
@@ -14,21 +14,18 @@ const connectionString = process.env.DATABASE_URL || 'postgres://:@localhost/v3'
  * @param {string} note.text - Text of note
  * @param {string} note.datetime - Datetime of note
  *
- * @returns {Object} Promise representing the object result of creating the note
+ * @returns {Object} Object with errors if any.
  */
 function validateText(note) {
   const errors = [];
-  // title check
   if (!validator.isLength(note.title, { min: 1, max: 255 })) {
     errors.push({ field: 'title', message: 'Title must be a string of length 1 to 255 characters' });
   }
 
-  // text check
   if (typeof note.text !== 'string') {
     errors.push({ field: 'text', message: 'Text must be a string' });
   }
 
-  // datetime check
   if (!validator.isISO8601(note.datetime)) {
     errors.push({ field: 'datetime', message: 'Datetime must be a ISO 8601 date' });
   }
@@ -132,22 +129,20 @@ async function update(id, note) {
   const validation = validateText(note);
   if (validation.length === 0) {
     try {
-      await client.connect();
       const updateQuery = 'UPDATE notes SET title = $2, text = $3, datetime = $4 WHERE id = $1';
-      await client.query(updateQuery, [id, xss(note.title), xss(note.text), xss(note.datetime)]);
       const query = 'SELECT * FROM notes WHERE id = $1';
-      const dbResult = await client.query(query, [id]);
+      await client.connect();
+      await client.query(updateQuery, [id, xss(note.title), xss(note.text), xss(note.datetime)]);
+      const data = await client.query(query, [id]);
       await client.end();
-      result.item = dbResult.rows[index];
+      result.item = data.rows[index];
       result.error = null;
-      return result;
     } catch (err) {
       console.info(err);
     }
   } else {
     result.item = null;
     result.error = validation;
-    return result;
   }
 
   return result;
