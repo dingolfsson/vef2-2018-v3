@@ -16,20 +16,20 @@ const connectionString = process.env.DATABASE_URL || 'postgres://:@localhost/v3'
  *
  * @returns {Object} Promise representing the object result of creating the note
  */
-function validateText({ title, text, datetime }) {
+function validateText(note) {
   const errors = [];
   // title check
-  if (!validator.isLength(title, { min: 1, max: 255 })) {
+  if (!validator.isLength(note.title, { min: 1, max: 255 })) {
     errors.push({ field: 'title', message: 'Title must be a string of length 1 to 255 characters' });
   }
 
   // text check
-  if (typeof text !== 'string') {
+  if (typeof note.text !== 'string') {
     errors.push({ field: 'text', message: 'Text must be a string' });
   }
 
   // datetime check
-  if (!validator.isISO8601(datetime)) {
+  if (!validator.isISO8601(note.datetime)) {
     errors.push({ field: 'datetime', message: 'Datetime must be a ISO 8601 date' });
   }
   return errors;
@@ -45,17 +45,17 @@ function validateText({ title, text, datetime }) {
  *
  * @returns {Promise} Promise representing the object result of creating the note
  */
-async function create({ title = '', text = '', datetime = '' } = {}) {
+async function create(note) {
   const client = new Client({ connectionString });
   const result = ({ error: '', item: '' });
   const index = 0;
 
-  const validation = validateText({ title, text, datetime });
+  const validation = validateText(note);
   if (validation.length === 0) {
     try {
       await client.connect();
       const query = 'INSERT INTO notes (datetime, title, text) VALUES ($3, $1, $2) RETURNING *';
-      const values = [xss(title), xss(text), xss(datetime)];
+      const values = [xss(note.title), xss(note.text), xss(note.datetime)];
       const data = await client.query(query, values);
       await client.end();
       result.item = data.rows[index];
@@ -124,17 +124,17 @@ async function readOne(id) {
  *
  * @returns {Promise} Promise representing the object result of creating the note
  */
-async function update(id, { title, text, datetime } = {}) {
+async function update(id, note) {
   const client = new Client({ connectionString });
   const result = ({ error: '', item: '' });
   const index = 0;
 
-  const validation = validateText({ title, text, datetime });
+  const validation = validateText(note);
   if (validation.length === 0) {
     try {
       await client.connect();
       const updateQuery = 'UPDATE notes SET title = $2, text = $3, datetime = $4 WHERE id = $1';
-      await client.query(updateQuery, [id, xss(title), xss(text), xss(datetime)]);
+      await client.query(updateQuery, [id, xss(note.title), xss(note.text), xss(note.datetime)]);
       const query = 'SELECT * FROM notes WHERE id = $1';
       const dbResult = await client.query(query, [id]);
       await client.end();
